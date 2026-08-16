@@ -1,11 +1,26 @@
 import { Platform } from "react-native";
+import Constants from "expo-constants";
 import { Place, FeedResponse, EventItem, CollectionItem } from "@mestory/shared";
 
-// В React Native на Android localhost мапится на 10.0.2.2
-const BASE_URL =
-  Platform.OS === "android"
-    ? "http://10.0.2.2:4000/api"
-    : "http://localhost:4000/api";
+// Динамическое определение IP хоста для работы как на реальном телефоне, так и в эмуляторах
+function getApiBaseUrl(): string {
+  // На физическом смартфоне через Expo Go берем реальный IP хоста Metro
+  const hostUri = Constants.expoConfig?.hostUri || (Constants as any).manifest?.debuggerHost;
+  if (hostUri) {
+    const host = hostUri.split(":")[0];
+    return `http://${host}:4000/api`;
+  }
+
+  // Для Android эмулятора (Android Studio)
+  if (Platform.OS === "android") {
+    return "http://10.0.2.2:4000/api";
+  }
+
+  // По умолчанию для iOS симулятора и Web
+  return "http://localhost:4000/api";
+}
+
+const BASE_URL = getApiBaseUrl();
 
 let authToken: string | null = null;
 
@@ -23,17 +38,22 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     headers["Authorization"] = `Bearer ${authToken}`;
   }
 
-  const res = await fetch(`${BASE_URL}${endpoint}`, {
-    ...options,
-    headers
-  });
+  try {
+    const res = await fetch(`${BASE_URL}${endpoint}`, {
+      ...options,
+      headers
+    });
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || `HTTP error ${res.status}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `HTTP error ${res.status}`);
+    }
+
+    return res.json();
+  } catch (error: any) {
+    console.warn(`[Mobile API Error] ${endpoint}:`, error?.message || error);
+    throw error;
   }
-
-  return res.json();
 }
 
 export const mobileApi = {
