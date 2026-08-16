@@ -1,0 +1,6 @@
+{
+  "name": "@mestory/tsconfig",
+  "version": "1.0.0",
+  "private": true,
+  "files": ["base.json", "nextjs.json", "node.json", "react-native.json"]
+}

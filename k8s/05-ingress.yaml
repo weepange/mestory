@@ -1,0 +1,40 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mestory-ingress
+  namespace: mestory
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/proxy-body-size: "20m"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, PUT, POST, DELETE, PATCH, OPTIONS"
+spec:
+  rules:
+    - host: mestory.local
+      http:
+        paths:
+          # API маршруты направляются в Fastify API сервис
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: mestory-api
+                port:
+                  number: 4000
+          # Swagger документация
+          - path: /docs
+            pathType: Prefix
+            backend:
+              service:
+                name: mestory-api
+                port:
+                  number: 4000
+          # Фронтенд и статика направляются в Next.js сервис
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: mestory-web
+                port:
+                  number: 3000

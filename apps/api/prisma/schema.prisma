@@ -1,0 +1,210 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                String            @id @default(cuid())
+  email             String?           @unique
+  phone             String?           @unique
+  passwordHash      String
+  name              String
+  handle            String            @unique
+  avatarUrl         String?
+  bio               String?
+  role              String            @default("USER") // USER, BUSINESS, ADMIN
+  isVerifiedCreator Boolean           @default(false)
+  cityId            String            @default("rostov-on-don")
+  interests         String            @default("[]") // JSON string array of tags
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  places            Place[]           @relation("BusinessOwner")
+  events            Event[]           @relation("OrganizerEvents")
+  stories           Story[]           @relation("AuthorStories")
+  posts             Post[]            @relation("AuthorPosts")
+  collections       Collection[]      @relation("AuthorCollections")
+  bookmarks         Bookmark[]
+  likes             Like[]
+  businessProfile   BusinessProfile?
+
+  followers         Follow[]          @relation("UserFollowers")
+  following         Follow[]          @relation("UserFollowing")
+}
+
+model Place {
+  id                 String            @id @default(cuid())
+  name               String
+  slug               String            @unique
+  summary            String
+  description        String
+  category           String            // coffee, restaurant, bar, culture, parks, events, activity
+  cityId             String            @default("rostov-on-don")
+  address            String
+  lat                Float
+  lng                Float
+  workingHoursText   String            @default("10:00 – 22:00")
+  phone              String?
+  website            String?
+  telegram           String?
+  vk                 String?
+  priceRange         String            @default("MODERATE") // FREE, BUDGET, MODERATE, EXPENSIVE, LUXURY
+  averageCheck       String?
+  photos             String            @default("[]") // JSON string array
+  coverPhoto         String
+  tags               String            @default("[]") // JSON string array
+  rating             Float             @default(4.8)
+  reviewsCount       Int               @default(0)
+  savesCount         Int               @default(0)
+  isVerifiedBusiness Boolean           @default(false)
+  businessOwnerId    String?
+  businessOwner      User?             @relation("BusinessOwner", fields: [businessOwnerId], references: [id])
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  events             Event[]
+  stories            Story[]
+  posts              Post[]
+  collectionItems    CollectionPlace[]
+}
+
+model Event {
+  id            String    @id @default(cuid())
+  title         String
+  slug          String    @unique
+  description   String
+  category      String    @default("events")
+  cityId        String    @default("rostov-on-don")
+  placeId       String?
+  place         Place?    @relation(fields: [placeId], references: [id], onDelete: SetNull)
+  placeName     String?
+  placeAddress  String?
+  lat           Float
+  lng           Float
+  startDateTime DateTime
+  endDateTime   DateTime?
+  isFree        Boolean   @default(false)
+  priceText     String    @default("Вход свободный")
+  ticketUrl     String?
+  coverPhoto    String
+  tags          String    @default("[]")
+  savesCount    Int       @default(0)
+  organizerId   String
+  organizer     User      @relation("OrganizerEvents", fields: [organizerId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  stories       Story[]
+}
+
+model Story {
+  id         String   @id @default(cuid())
+  title      String
+  mediaUrl   String
+  mediaType  String   @default("IMAGE") // IMAGE, VIDEO
+  placeId    String?
+  place      Place?   @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  eventId    String?
+  event      Event?   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  authorId   String
+  author     User     @relation("AuthorStories", fields: [authorId], references: [id], onDelete: Cascade)
+  cityId     String   @default("rostov-on-don")
+  expiresAt  DateTime
+  viewsCount Int      @default(0)
+  createdAt  DateTime @default(now())
+}
+
+model Post {
+  id         String   @id @default(cuid())
+  authorId   String
+  author     User     @relation("AuthorPosts", fields: [authorId], references: [id], onDelete: Cascade)
+  placeId    String?
+  place      Place?   @relation(fields: [placeId], references: [id], onDelete: SetNull)
+  rating     Int?
+  content    String
+  photos     String   @default("[]")
+  tags       String   @default("[]")
+  likesCount Int      @default(0)
+  savesCount Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Collection {
+  id          String            @id @default(cuid())
+  title       String
+  slug        String            @unique
+  description String
+  coverPhoto  String
+  authorId    String
+  author      User              @relation("AuthorCollections", fields: [authorId], references: [id], onDelete: Cascade)
+  cityId      String            @default("rostov-on-don")
+  isPublic    Boolean           @default(true)
+  savesCount  Int               @default(0)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  items       CollectionPlace[]
+}
+
+model CollectionPlace {
+  id           String     @id @default(cuid())
+  collectionId String
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  placeId      String
+  place        Place      @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  sortOrder    Int        @default(0)
+  addedAt      DateTime   @default(now())
+
+  @@unique([collectionId, placeId])
+}
+
+model Bookmark {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targetType String   // PLACE, EVENT, COLLECTION
+  targetId   String
+  folderName String   @default("Избранное")
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, targetType, targetId])
+}
+
+model Like {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targetType String   // POST, PLACE
+  targetId   String
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, targetType, targetId])
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  follower    User     @relation("UserFollowers", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId String
+  following   User     @relation("UserFollowing", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+}
+
+model BusinessProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName String
+  inn         String
+  ogrn        String?
+  status      String   @default("PENDING") // PENDING, VERIFIED, REJECTED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

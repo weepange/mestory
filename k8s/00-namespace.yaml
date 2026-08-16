@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mestory
+  labels:
+    app.kubernetes.io/name: mestory
+    app.kubernetes.io/part-of: mestory-platform

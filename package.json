@@ -1,0 +1,28 @@
+{
+  "name": "mestory-monorepo",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "db:generate": "turbo run db:generate",
+    "db:push": "turbo run db:push",
+    "db:seed": "turbo run db:seed"
+  },
+  "devDependencies": {
+    "turbo": "^2.4.4",
+    "typescript": "^5.8.2",
+    "prettier": "^3.5.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/react": "^18.3.12",
+      "@types/react-dom": "^18.3.1"
+    }
+  },
+  "packageManager": "pnpm@10.33.4",
+  "engines": {
+    "node": ">=18"
+  }
+}

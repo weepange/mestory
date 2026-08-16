@@ -1,0 +1,50 @@
+# ----------------------------------------------------
+# Base Stage
+# ----------------------------------------------------
+FROM node:20-alpine AS base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable && corepack prepare pnpm@10.33.4 --activate
+RUN apk add --no-cache libc6-compat openssl
+
+WORKDIR /app
+
+# ----------------------------------------------------
+# Dependencies & Build Stage
+# ----------------------------------------------------
+FROM base AS builder
+WORKDIR /app
+
+# Copy root workspace configs
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml turbo.json ./
+COPY packages ./packages
+COPY apps/api ./apps/api
+
+# Install dependencies for workspace
+RUN pnpm install --frozen-lockfile
+
+# Generate Prisma Client & Build
+WORKDIR /app/apps/api
+RUN npx prisma generate
+RUN pnpm build
+
+# ----------------------------------------------------
+# Production Runner Stage
+# ----------------------------------------------------
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PORT=4000
+ENV HOST=0.0.0.0
+
+# Copy node_modules and built assets
+COPY --from=builder /app /app
+
+WORKDIR /app/apps/api
+
+EXPOSE 4000
+
+RUN chmod +x docker-entrypoint.sh
+
+ENTRYPOINT ["./docker-entrypoint.sh"]
