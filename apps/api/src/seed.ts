@@ -76,10 +76,24 @@ async function seed() {
         cityId: "rostov-on-don",
         interests: JSON.stringify(["Авторские коктейли", "Винил", "Крафтовое пиво", "Свидание", "Для компании"])
       }
+    }),
+    prisma.user.create({
+      data: {
+        name: "Главный Администратор",
+        handle: "admin_mestory",
+        email: "admin@mestory.city",
+        passwordHash,
+        avatarUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&q=80",
+        bio: "Системный администратор городской платформы Mestory.",
+        role: "ADMIN",
+        isVerifiedCreator: true,
+        cityId: "rostov-on-don",
+        interests: JSON.stringify(["Администрирование", "Модерация", "Аналитика"])
+      }
     })
   ]);
 
-  const [authorFoodie, authorCulture, businessLeo, authorNight] = authors;
+  const [authorFoodie, authorCulture, businessLeo, authorNight, adminUser] = authors;
 
   // 2. Создание мест (Places) в Ростове-на-Дону
   const placeLeo = await prisma.place.create({

@@ -36,7 +36,7 @@ interface AuthContextType {
   closeAuthModal: () => void;
   login: (data: LoginDto) => Promise<void>;
   register: (data: RegisterDto) => Promise<void>;
-  demoLogin: (role?: "user" | "creator" | "business") => Promise<void>;
+  demoLogin: (role?: "user" | "creator" | "business" | "admin") => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -102,7 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsAuthModalOpen(false);
   };
 
-  const demoLogin = async (role: "user" | "creator" | "business" = "user") => {
+  const demoLogin = async (role: "user" | "creator" | "business" | "admin" = "user") => {
     const res = await api.demoLogin(role);
     localStorage.setItem("mestory_token", res.token);
     setToken(res.token);

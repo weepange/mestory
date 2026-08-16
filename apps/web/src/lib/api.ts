@@ -213,7 +213,7 @@ export const api = {
     });
   },
 
-  demoLogin: (role: "user" | "creator" | "business" = "user") => {
+  demoLogin: (role: "user" | "creator" | "business" | "admin" = "user") => {
     return request<{ token: string; user: any }>("/auth/demo-login", {
       method: "POST",
       body: JSON.stringify({ role })
@@ -222,5 +222,107 @@ export const api = {
 
   getMe: () => {
     return request<any>("/auth/me");
+  },
+
+  // Admin Module
+  admin: {
+    getStats: () => {
+      return request<{
+        users: { total: number; creators: number; businesses: number };
+        places: { total: number; verified: number };
+        content: { events: number; stories: number; collections: number; reviews: number; bookmarks: number };
+        verifications: { pending: number };
+      }>("/admin/stats");
+    },
+    getPlaces: (params?: { search?: string; category?: string; isVerified?: string }) => {
+      const sp = new URLSearchParams();
+      if (params?.search) sp.set("search", params.search);
+      if (params?.category) sp.set("category", params.category);
+      if (params?.isVerified !== undefined) sp.set("isVerified", params.isVerified);
+      return request<{ total: number; items: any[] }>(`/admin/places?${sp.toString()}`);
+    },
+    createPlace: (data: any) => {
+      return request<any>("/admin/places", {
+        method: "POST",
+        body: JSON.stringify(data)
+      });
+    },
+    updatePlace: (id: string, data: any) => {
+      return request<any>(`/admin/places/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(data)
+      });
+    },
+    deletePlace: (id: string) => {
+      return request<{ success: boolean; message: string }>(`/admin/places/${id}`, {
+        method: "DELETE"
+      });
+    },
+    getEvents: () => {
+      return request<{ total: number; items: any[] }>("/admin/events");
+    },
+    createEvent: (data: any) => {
+      return request<any>("/admin/events", {
+        method: "POST",
+        body: JSON.stringify(data)
+      });
+    },
+    updateEvent: (id: string, data: any) => {
+      return request<any>(`/admin/events/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(data)
+      });
+    },
+    deleteEvent: (id: string) => {
+      return request<{ success: boolean; message: string }>(`/admin/events/${id}`, {
+        method: "DELETE"
+      });
+    },
+    getStories: () => {
+      return request<{ total: number; items: any[] }>("/admin/stories");
+    },
+    deleteStory: (id: string) => {
+      return request<{ success: boolean; message: string }>(`/admin/stories/${id}`, {
+        method: "DELETE"
+      });
+    },
+    getCollections: () => {
+      return request<{ total: number; items: any[] }>("/admin/collections");
+    },
+    deleteCollection: (id: string) => {
+      return request<{ success: boolean; message: string }>(`/admin/collections/${id}`, {
+        method: "DELETE"
+      });
+    },
+    getUsers: (params?: { search?: string; role?: string }) => {
+      const sp = new URLSearchParams();
+      if (params?.search) sp.set("search", params.search);
+      if (params?.role) sp.set("role", params.role);
+      return request<{ total: number; items: any[] }>(`/admin/users?${sp.toString()}`);
+    },
+    updateUser: (id: string, data: any) => {
+      return request<any>(`/admin/users/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(data)
+      });
+    },
+    deleteUser: (id: string) => {
+      return request<{ success: boolean; message: string }>(`/admin/users/${id}`, {
+        method: "DELETE"
+      });
+    },
+    getBusinessVerifications: () => {
+      return request<{ total: number; items: any[] }>("/admin/business-verifications");
+    },
+    approveVerification: (id: string) => {
+      return request<{ success: boolean; profile: any }>(`/admin/business-verifications/${id}/approve`, {
+        method: "POST"
+      });
+    },
+    rejectVerification: (id: string) => {
+      return request<{ success: boolean; profile: any }>(`/admin/business-verifications/${id}/reject`, {
+        method: "POST"
+      });
+    }
   }
 };

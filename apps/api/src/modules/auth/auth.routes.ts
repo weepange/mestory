@@ -141,7 +141,9 @@ export const authRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) =
     const { role = "user" } = (request.body as { role?: string }) || {};
 
     let user;
-    if (role === "creator") {
+    if (role === "admin") {
+      user = await prisma.user.findFirst({ where: { role: "ADMIN" } });
+    } else if (role === "creator") {
       user = await prisma.user.findFirst({ where: { isVerifiedCreator: true } });
     } else if (role === "business") {
       user = await prisma.user.findFirst({ where: { role: "BUSINESS" } });

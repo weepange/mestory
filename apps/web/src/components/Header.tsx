@@ -14,7 +14,8 @@ import {
   LogOut,
   ChevronDown,
   Sparkles,
-  Map as MapIcon
+  Map as MapIcon,
+  ShieldCheck
 } from "lucide-react";
 import { CITIES, CityId } from "@mestory/shared";
 import { useAuth } from "@/lib/auth-context";
@@ -176,6 +177,22 @@ export function Header({
             <Building2 className="w-4 h-4" />
           </Link>
 
+          {/* Кнопка Админ-панели (если вошел админ или всегда доступна для тестирования) */}
+          {user?.role === "ADMIN" && (
+            <Link
+              href="/admin"
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-bold transition-colors ${
+                pathname === "/admin"
+                  ? "bg-amber-500 text-slate-950 border-amber-400 shadow-glowAmber"
+                  : "bg-amber-500/15 border-amber-500/30 text-amber-400 hover:bg-amber-500/25"
+              }`}
+              title="Панель администратора"
+            >
+              <ShieldCheck className="w-4 h-4" />
+              <span className="hidden md:inline">Админка</span>
+            </Link>
+          )}
+
           {/* Профиль / Вход */}
           {user ? (
             <div className="relative">
@@ -197,13 +214,18 @@ export function Header({
               </button>
 
               {isUserMenuOpen && (
-                <div className="absolute right-0 top-full mt-2 w-52 rounded-xl glass-panel p-2 shadow-2xl z-50 border border-white/10">
+                <div className="absolute right-0 top-full mt-2 w-56 rounded-xl glass-panel p-2 shadow-2xl z-50 border border-white/10">
                   <div className="px-3 py-2 border-b border-white/10 mb-1">
                     <p className="text-xs font-semibold text-white truncate">
                       {user.name}
                     </p>
                     <p className="text-[11px] text-amber-400">@{user.handle}</p>
-                    {user.isVerifiedCreator && (
+                    {user.role === "ADMIN" && (
+                      <span className="inline-block mt-0.5 text-[10px] text-amber-300 font-bold px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-500/30">
+                        👑 Администратор
+                      </span>
+                    )}
+                    {user.isVerifiedCreator && user.role !== "ADMIN" && (
                       <span className="text-[10px] text-emerald-400 font-medium">
                         ✓ Верифицированный автор
                       </span>
@@ -235,6 +257,15 @@ export function Header({
                   >
                     <Building2 className="w-3.5 h-3.5 text-emerald-400" />
                     <span>Кабинет заведения</span>
+                  </Link>
+
+                  <Link
+                    href="/admin"
+                    onClick={() => setIsUserMenuOpen(false)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-amber-300 hover:bg-amber-500/15 transition-colors border-t border-white/5 mt-1 pt-2 font-medium"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Панель администратора</span>
                   </Link>
 
                   <button

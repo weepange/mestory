@@ -58,6 +58,30 @@ export function StoryViewerModal({
     }
   }, [currentStory?.id]);
 
+  const handleNext = React.useCallback(() => {
+    setProgress(0);
+    setIsLiked(false);
+    if (currentGroup && storyIndex < currentGroup.stories.length - 1) {
+      setStoryIndex(storyIndex + 1);
+    } else if (groupIndex < groups.length - 1) {
+      setGroupIndex(groupIndex + 1);
+      setStoryIndex(0);
+    } else {
+      onClose();
+    }
+  }, [currentGroup, storyIndex, groupIndex, groups.length, onClose]);
+
+  const handlePrev = React.useCallback(() => {
+    setProgress(0);
+    setIsLiked(false);
+    if (storyIndex > 0) {
+      setStoryIndex(storyIndex - 1);
+    } else if (groupIndex > 0) {
+      setGroupIndex(groupIndex - 1);
+      setStoryIndex(groups[groupIndex - 1].stories.length - 1);
+    }
+  }, [storyIndex, groupIndex, groups]);
+
   // Таймер прогресса (5 секунд на показ слайда)
   useEffect(() => {
     if (isPaused || !currentStory) return;
@@ -78,31 +102,7 @@ export function StoryViewerModal({
     return () => {
       if (progressTimerRef.current) clearInterval(progressTimerRef.current);
     };
-  }, [groupIndex, storyIndex, isPaused, currentStory]);
-
-  const handleNext = () => {
-    setProgress(0);
-    setIsLiked(false);
-    if (storyIndex < currentGroup.stories.length - 1) {
-      setStoryIndex(storyIndex + 1);
-    } else if (groupIndex < groups.length - 1) {
-      setGroupIndex(groupIndex + 1);
-      setStoryIndex(0);
-    } else {
-      onClose();
-    }
-  };
-
-  const handlePrev = () => {
-    setProgress(0);
-    setIsLiked(false);
-    if (storyIndex > 0) {
-      setStoryIndex(storyIndex - 1);
-    } else if (groupIndex > 0) {
-      setGroupIndex(groupIndex - 1);
-      setStoryIndex(groups[groupIndex - 1].stories.length - 1);
-    }
-  };
+  }, [isPaused, currentStory, handleNext]);
 
   // Горячие клавиши
   useEffect(() => {
@@ -114,7 +114,7 @@ export function StoryViewerModal({
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [groupIndex, storyIndex]);
+  }, [handleNext, handlePrev, onClose]);
 
   if (!mounted || !currentGroup || !currentStory) return null;
 

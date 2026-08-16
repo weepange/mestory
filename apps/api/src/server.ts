@@ -15,6 +15,7 @@ import { collectionsRoutes } from "./modules/collections/collections.routes";
 import { postsRoutes } from "./modules/posts/posts.routes";
 import { usersRoutes } from "./modules/users/users.routes";
 import { businessRoutes } from "./modules/business/business.routes";
+import { adminRoutes } from "./modules/admin/admin.routes";
 
 dotenv.config();
 
@@ -101,6 +102,7 @@ async function main() {
   await server.register(postsRoutes, { prefix: "/api/posts" });
   await server.register(usersRoutes, { prefix: "/api/users" });
   await server.register(businessRoutes, { prefix: "/api/business" });
+  await server.register(adminRoutes, { prefix: "/api/admin" });
 
   const port = parseInt(process.env.PORT || "4000", 10);
   const host = process.env.HOST || "0.0.0.0";

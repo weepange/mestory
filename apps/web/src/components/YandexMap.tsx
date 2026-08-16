@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
-import { MapPin, Navigation, Compass, Layers, Star } from "lucide-react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
+import { MapPin, Navigation, Sparkles } from "lucide-react";
 import { Place, PLACE_CATEGORIES } from "@mestory/shared";
 import { useAuth } from "@/lib/auth-context";
 
@@ -30,71 +30,7 @@ export function YandexMap({
     lng: selectedCity.center.lng
   };
 
-  useEffect(() => {
-    let isSubscribed = true;
-
-    const loadYandexMaps = () => {
-      if ((window as any).ymaps) {
-        (window as any).ymaps.ready(() => {
-          if (isSubscribed) initMap();
-        });
-        return;
-      }
-
-      const script = document.createElement("script");
-      script.src = "https://api-maps.yandex.ru/2.1/?lang=ru_RU";
-      script.async = true;
-      script.onload = () => {
-        if ((window as any).ymaps) {
-          (window as any).ymaps.ready(() => {
-            if (isSubscribed) initMap();
-          });
-        }
-      };
-      document.head.appendChild(script);
-    };
-
-    const initMap = () => {
-      if (!mapContainerRef.current || mapInstanceRef.current) return;
-      const ymaps = (window as any).ymaps;
-
-      const map = new ymaps.Map(
-        mapContainerRef.current,
-        {
-          center: [activeCenter.lat, activeCenter.lng],
-          zoom,
-          controls: ["zoomControl", "fullscreenControl"]
-        },
-        {
-          searchControlProvider: "yandex#search",
-          suppressMapOpenBlock: true
-        }
-      );
-
-      mapInstanceRef.current = map;
-      setIsLoaded(true);
-      renderPlacemarks(map, ymaps);
-    };
-
-    loadYandexMaps();
-
-    return () => {
-      isSubscribed = false;
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.destroy();
-        mapInstanceRef.current = null;
-      }
-    };
-  }, [selectedCity.id]);
-
-  // Обновление меток при изменении мест или выбранного места
-  useEffect(() => {
-    if (mapInstanceRef.current && (window as any).ymaps) {
-      renderPlacemarks(mapInstanceRef.current, (window as any).ymaps);
-    }
-  }, [places, selectedPlaceId]);
-
-  const renderPlacemarks = (map: any, ymaps: any) => {
+  const renderPlacemarks = useCallback((map: any, ymaps: any) => {
     map.geoObjects.removeAll();
 
     places.forEach((place) => {
@@ -146,7 +82,71 @@ export function YandexMap({
 
       map.geoObjects.add(placemark);
     });
-  };
+  }, [places, selectedPlaceId, onSelectPlace]);
+
+  useEffect(() => {
+    let isSubscribed = true;
+
+    const initMap = () => {
+      if (!mapContainerRef.current || mapInstanceRef.current) return;
+      const ymaps = (window as any).ymaps;
+
+      const map = new ymaps.Map(
+        mapContainerRef.current,
+        {
+          center: [activeCenter.lat, activeCenter.lng],
+          zoom,
+          controls: ["zoomControl", "fullscreenControl"]
+        },
+        {
+          searchControlProvider: "yandex#search",
+          suppressMapOpenBlock: true
+        }
+      );
+
+      mapInstanceRef.current = map;
+      setIsLoaded(true);
+      renderPlacemarks(map, ymaps);
+    };
+
+    const loadYandexMaps = () => {
+      if ((window as any).ymaps) {
+        (window as any).ymaps.ready(() => {
+          if (isSubscribed) initMap();
+        });
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.src = "https://api-maps.yandex.ru/2.1/?lang=ru_RU";
+      script.async = true;
+      script.onload = () => {
+        if ((window as any).ymaps) {
+          (window as any).ymaps.ready(() => {
+            if (isSubscribed) initMap();
+          });
+        }
+      };
+      document.head.appendChild(script);
+    };
+
+    loadYandexMaps();
+
+    return () => {
+      isSubscribed = false;
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.destroy();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [selectedCity.id, activeCenter.lat, activeCenter.lng, zoom, renderPlacemarks]);
+
+  // Обновление меток при изменении мест или выбранного места
+  useEffect(() => {
+    if (mapInstanceRef.current && (window as any).ymaps) {
+      renderPlacemarks(mapInstanceRef.current, (window as any).ymaps);
+    }
+  }, [renderPlacemarks]);
 
   const handleCenterUserLocation = () => {
     requestUserLocation();
