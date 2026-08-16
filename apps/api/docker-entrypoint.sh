@@ -8,4 +8,4 @@ echo "🌱 Running database seed (if needed)..."
 npx tsx src/seed.ts || echo "Seed skipped or already populated."
 
 echo "🚀 Starting Mestory Fastify API..."
-exec node dist/server.js
+exec npx tsx src/server.ts
